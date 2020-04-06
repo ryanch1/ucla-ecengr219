@@ -70,7 +70,7 @@ def process_stop_words(stop_word_set):
     return my_custom_preprocessor(doc_string).split()
 
 #############################
-#### Problem #2 Execution ###
+#### Problem #3 Execution ###
 #############################
 
 # Problem Setup/Definition:
@@ -115,4 +115,33 @@ print("Number of articles within the TEST Dataset: " + str(len(test_dataset.file
 print("Number of Features (unique words) in TEST dataset (After Processing): "+ str(len(test_count_vectorizer.get_feature_names())))
 print("Shape of TEST document-count-matrix: " + str(test_doc_term_matrix.shape))
 print("Shape of TEST TF-IDF Matrix: " + str(test_tfidf.shape))
+print("\n\n" + '-'*40 + "\n\n")
+
+# Start LSI Analysis
+from sklearn.decomposition import TruncatedSVD
+
+svd_settings = TruncatedSVD(n_components=50, random_state=0)
+reduced__LSI_train_tfidf_matrix = svd_settings.fit_transform(train_tfidf)
+
+print("Shape of tf-idf matrix after SVD reduction (Top 50): "+str(reduced__LSI_train_tfidf_matrix.shape))
+print("Number of Features (unique words) in TRAINING dataset (After SVD Reduction)(Top 50): \n" + str(test_count_vectorizer.get_feature_names()))
+print("Array Representation of tf-idf matrix after reduction: \n"+str(reduced__LSI_train_tfidf_matrix))
+print("\n\n" + '-'*40 + "\n\n")
+
+# Start NMF Analysis
+from sklearn.decomposition import NMF
+nmf_settings = NMF(n_components=50, init='random', random_state=0)
+reduced_SVD_train_nmf_matrix = nmf_settings.fit_transform(train_tfidf)
+
+nmf_settings_components = nmf_settings.components_
+print("Shape of reduced tf-idf matrix (top 50 words) (H): "+str(nmf_settings_components.shape))
+print("Reduced tf-idf matrix (top 50 words) (H): "+str(nmf_settings_components))
+print("\n\n" + '-'*40 + "\n\n")
+
+# Calculate LSI/NMF Values:
+print("Calculated LSI value:")
+print(np.sum(np.array(train_tfidf - reduced__LSI_train_tfidf_matrix.dot(svd_settings.components_)) ** 2))
+print("Calculated NMF value")
+print(np.sum(np.array(train_tfidf - reduced_SVD_train_nmf_matrix.dot(nmf_settings_components)) **2))
+
 
