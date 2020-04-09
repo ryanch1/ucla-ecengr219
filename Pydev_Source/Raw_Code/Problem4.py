@@ -70,7 +70,7 @@ def process_stop_words(stop_word_set):
     return my_custom_preprocessor(doc_string).split()
 
 #############################
-#### Problem #3 Execution ###
+#### Problem #4 Setup     ###
 #############################
 
 # Problem Setup/Definition:
@@ -149,4 +149,16 @@ print("\n\n" + '-'*40 + "\n\n")
 #############################
 #### Problem #4 Execution ###
 #############################
+from sklearn.svm import LinearSVC
+#reduced_test_data_transform_only = nmf_settings.transform(test_tfidf)
+
+count_vect = CountVectorizer(min_df=3, preprocessor=my_custom_preprocessor, stop_words=process_stop_words(combined_stopwords))
+X_test_counts = count_vect.transform(test_dataset.data)
+X_new_tfidf = tfidf_transformer.transform(X_new_counts)
+
+nmf_settings = NMF(n_components=50, init='random', random_state=0)
+reduced_test_nmf_matrix = nmf_settings.transform(X_new_tfidf)
+
+#LinearSVC().fit(X_train_tfidf, twenty_train.target).predict(X_new_tfidf)
+LinearSVC(loss='hinge',C=0.01).fit(reduced_train_nmf_matrix, train_dataset.target).predict(reduced_test_nmf_matrix)
 
