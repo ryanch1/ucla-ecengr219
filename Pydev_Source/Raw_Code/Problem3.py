@@ -85,63 +85,53 @@ categories = ['comp.graphics', 'comp.os.ms-windows.misc',
 'rec.autos', 'rec.motorcycles',
 'rec.sport.baseball', 'rec.sport.hockey']
 
-# Load a training & test data sets consisting of those 8 categories
+# Load a training data sets consisting of those 8 categories
 train_dataset = fetch_20newsgroups(subset = 'train', categories = categories, shuffle = True, random_state = None)
-test_dataset = fetch_20newsgroups(subset = 'test', categories = categories, shuffle = True, random_state = None)
 print("\n\n" + '-'*40 + "\n\n")
 
-# Define the CountVectorizer = document-term matrix
+# Define the CountVectorizer = document-term matrix, after stemming + lemmatizing
 train_count_vectorizer = CountVectorizer(min_df=3, preprocessor=my_custom_preprocessor, stop_words=process_stop_words(combined_stopwords))
 train_doc_term_matrix = train_count_vectorizer.fit_transform(train_dataset.data)
-print(train_count_vectorizer)
-print("\n\n" + '-'*40 + "\n\n")
-
-test_count_vectorizer = CountVectorizer(min_df=3, preprocessor=my_custom_preprocessor, stop_words=process_stop_words(combined_stopwords))
-test_doc_term_matrix = test_count_vectorizer.fit_transform(test_dataset.data)
-print(test_count_vectorizer)
+print("Settings of the CountVectorizer(): " + str(train_count_vectorizer))
 print("\n\n" + '-'*40 + "\n\n")
 
 # Start TD-DIF Transform process
 tfidf_transformer = TfidfTransformer()
 train_tfidf = tfidf_transformer.fit_transform(train_doc_term_matrix)
-test_tfidf = tfidf_transformer.fit_transform(test_doc_term_matrix)
 
 print("Number of articles within the TRAIN Dataset: " + str(len(train_dataset.filenames)))
 print("Number of Features (unique words) in TRAINING dataset (After Processing): "+ str(len(train_count_vectorizer.get_feature_names())))
 print("Shape of TRAINING document-count-matrix: " + str(train_doc_term_matrix.shape))
 print("Shape of TRAINING TF-IDF Matrix: " + str(train_tfidf.shape))
-
-print("Number of articles within the TEST Dataset: " + str(len(test_dataset.filenames)))
-print("Number of Features (unique words) in TEST dataset (After Processing): "+ str(len(test_count_vectorizer.get_feature_names())))
-print("Shape of TEST document-count-matrix: " + str(test_doc_term_matrix.shape))
-print("Shape of TEST TF-IDF Matrix: " + str(test_tfidf.shape))
 print("\n\n" + '-'*40 + "\n\n")
 
-# Start LSI Analysis
+#####################
+#### LSI Analysis ###
+#####################
 from sklearn.decomposition import TruncatedSVD
 
 svd_settings = TruncatedSVD(n_components=50, random_state=0)
-reduced__LSI_train_tfidf_matrix = svd_settings.fit_transform(train_tfidf)
+reduced_LSI_train_matrix = svd_settings.fit_transform(train_tfidf)
 
-print("Shape of tf-idf matrix after SVD reduction (Top 50): "+str(reduced__LSI_train_tfidf_matrix.shape))
-print("Number of Features (unique words) in TRAINING dataset (After SVD Reduction)(Top 50): \n" + str(test_count_vectorizer.get_feature_names()))
-print("Array Representation of tf-idf matrix after reduction: \n"+str(reduced__LSI_train_tfidf_matrix))
+print("Shape of tf-idf matrix after LSI reduction (Top 50 words): " + str(reduced_LSI_train_matrix.shape))
 print("\n\n" + '-'*40 + "\n\n")
 
-# Start NMF Analysis
+#####################
+#### NMF Analysis ###
+#####################
 from sklearn.decomposition import NMF
-nmf_settings = NMF(n_components=50, init='random', random_state=0)
-reduced_SVD_train_nmf_matrix = nmf_settings.fit_transform(train_tfidf)
 
+nmf_settings = NMF(n_components=50, init='random', random_state=0)
+reduced_NMF_train_matrix = nmf_settings.fit_transform(train_tfidf)
 nmf_settings_components = nmf_settings.components_
-print("Shape of reduced tf-idf matrix (top 50 words) (H): "+str(nmf_settings_components.shape))
-print("Reduced tf-idf matrix (top 50 words) (H): "+str(nmf_settings_components))
+
+print("Shape of tf-idf matrix after NMF reduction (Top 50 words): "+str(reduced_NMF_train_matrix.shape))
 print("\n\n" + '-'*40 + "\n\n")
 
-# Calculate LSI/NMF Values:
+# Calculate LSI/NMF Values: All performed on train_dataset, save test_dataset for prediction/k-fold analysis
 print("Calculated LSI value:")
-print(np.sum(np.array(train_tfidf - reduced__LSI_train_tfidf_matrix.dot(svd_settings.components_)) ** 2))
+print(np.sum(np.array(train_tfidf - reduced_LSI_train_matrix.dot(svd_settings.components_)) ** 2))
 print("Calculated NMF value")
-print(np.sum(np.array(train_tfidf - reduced_SVD_train_nmf_matrix.dot(nmf_settings_components)) **2))
+print(np.sum(np.array(train_tfidf - reduced_NMF_train_matrix.dot(nmf_settings_components)) **2))
 
 

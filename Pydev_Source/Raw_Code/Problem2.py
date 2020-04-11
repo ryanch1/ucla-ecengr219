@@ -88,7 +88,6 @@ categories = ['comp.graphics', 'comp.os.ms-windows.misc',
 # Load a training & test data sets consisting of those 8 categories
 train_dataset = fetch_20newsgroups(subset = 'train', categories = categories, shuffle = True, random_state = None)
 test_dataset = fetch_20newsgroups(subset = 'test', categories = categories, shuffle = True, random_state = None)
-print("\n\n" + '-'*40 + "\n\n")
 
 # Define the CountVectorizer = document-term matrix
 train_count_vectorizer = CountVectorizer(min_df=3, preprocessor=my_custom_preprocessor, stop_words=process_stop_words(combined_stopwords))
@@ -106,10 +105,12 @@ tfidf_transformer = TfidfTransformer()
 train_tfidf = tfidf_transformer.fit_transform(train_doc_term_matrix)
 test_tfidf = tfidf_transformer.fit_transform(test_doc_term_matrix)
 
+# Print out Shapes & Other stats of TD-IDF matrices 
 print("Number of articles within the TRAIN Dataset: " + str(len(train_dataset.filenames)))
 print("Number of Features (unique words) in TRAINING dataset (After Processing): "+ str(len(train_count_vectorizer.get_feature_names())))
 print("Shape of TRAINING document-count-matrix: " + str(train_doc_term_matrix.shape))
 print("Shape of TRAINING TF-IDF Matrix: " + str(train_tfidf.shape))
+print("\n\n" + '-'*40 + "\n\n")
 
 print("Number of articles within the TEST Dataset: " + str(len(test_dataset.filenames)))
 print("Number of Features (unique words) in TEST dataset (After Processing): "+ str(len(test_count_vectorizer.get_feature_names())))
